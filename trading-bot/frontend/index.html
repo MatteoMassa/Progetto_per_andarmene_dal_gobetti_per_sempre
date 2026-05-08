@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Trading Bot Dashboard</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg0: #080c10;
+      --bg1: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --bg4: #30363d;
+      --text0: #e6edf3;
+      --text1: #8b949e;
+      --text2: #6e7681;
+      --green: #3fb950;
+      --green-dim: #1a4429;
+      --red: #f85149;
+      --red-dim: #4a1a1a;
+      --gold: #d4a017;
+      --gold-dim: #2d2200;
+      --blue: #58a6ff;
+      --blue-dim: #0d2045;
+      --purple: #bc8cff;
+      --border: #30363d;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-display: 'Syne', sans-serif;
+    }
+
+    body {
+      background: var(--bg0);
+      color: var(--text0);
+      font-family: var(--font-mono);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scanline subtle overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text0);
+    }
+    .logo span { color: var(--gold); }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s infinite;
+    }
+    .status-dot.offline { background: var(--red); box-shadow: 0 0 8px var(--red); animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .status-label { font-size: 11px; color: var(--text1); letter-spacing: 1px; text-transform: uppercase; }
+    .header-time { font-size: 12px; color: var(--text2); }
+
+    /* ── Balance bar ── */
+    .balance-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .balance-card {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+    }
+    .balance-card-label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+    .balance-card-value { font-size: 20px; font-weight: 700; color: var(--text0); }
+    .balance-card-value.positive { color: var(--green); }
+    .balance-card-value.negative { color: var(--red); }
+
+    /* ── Grid principale ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    /* ── Price card ── */
+    .price-card {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .price-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      transition: opacity 0.3s;
+    }
+    .price-card.xau::before { background: linear-gradient(90deg, var(--gold), transparent); }
+    .price-card.xag::before { background: linear-gradient(90deg, #aaa, transparent); }
+    .price-card.eur::before { background: linear-gradient(90deg, var(--blue), transparent); }
+    .price-card.btc::before { background: linear-gradient(90deg, var(--purple), transparent); }
+    .price-card-pair { font-family: var(--font-display); font-size: 13px; font-weight: 600; color: var(--text1); margin-bottom: 4px; letter-spacing: 1px; }
+    .price-card-price { font-size: 22px; font-weight: 700; color: var(--text0); font-family: var(--font-mono); }
+    .price-card-ema { font-size: 10px; color: var(--text2); margin-top: 8px; }
+    .price-card-ema span { margin-right: 10px; }
+    .ema-fast { color: #58a6ff; }
+    .ema-slow { color: #bc8cff; }
+    .price-flash { animation: flashGreen 0.4s ease; }
+    .price-flash-red { animation: flashRed 0.4s ease; }
+    @keyframes flashGreen { 0%{background:rgba(63,185,80,0.15)} 100%{background:transparent} }
+    @keyframes flashRed { 0%{background:rgba(248,81,73,0.15)} 100%{background:transparent} }
+
+    /* ── Sezione operazioni ── */
+    .section {
+      background: var(--bg1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text0);
+      letter-spacing: 0.5px;
+    }
+    .section-count {
+      background: var(--bg3);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: var(--text1);
+    }
+
+    /* ── Tabella ── */
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text2);
+      padding: 10px 18px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-weight: 500;
+    }
+    tbody tr {
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+      transition: background 0.15s;
+    }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+    tbody tr:last-child { border-bottom: none; }
+    td {
+      padding: 12px 18px;
+      font-size: 12px;
+      color: var(--text0);
+      vertical-align: middle;
+    }
+
+    /* ── Badge ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+    .badge-buy { background: var(--green-dim); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+    .badge-sell { background: var(--red-dim); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+    .badge-open { background: rgba(88,166,255,0.1); color: var(--blue); border: 1px solid rgba(88,166,255,0.2); }
+    .badge-closed { background: var(--bg3); color: var(--text1); border: 1px solid var(--border); }
+
+    /* ── P&L ── */
+    .pnl-positive { color: var(--green); }
+    .pnl-negative { color: var(--red); }
+    .pnl-zero { color: var(--text1); }
+
+    /* ── Pair pill ── */
+    .pair-pill {
+      font-weight: 700;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .pair-XAU { color: var(--gold); background: var(--gold-dim); }
+    .pair-XAG { color: #c0c0c0; background: #1a1a1a; }
+    .pair-EUR { color: var(--blue); background: var(--blue-dim); }
+    .pair-BTC { color: var(--purple); background: rgba(188,140,255,0.08); }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--text2);
+      font-size: 13px;
+    }
+    .empty-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.4; }
+
+    /* ── Loading ── */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      gap: 12px;
+      color: var(--text2);
+      font-size: 13px;
+    }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Mini bar P&L ── */
+    .pnl-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pnl-indicator {
+      width: 4px; height: 14px;
+      border-radius: 2px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr 1fr; }
+      .balance-bar { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .balance-bar { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+const WS_URL = "ws://localhost:8000/ws";
+const API_URL = "http://localhost:8000/api/state";
+
+const PAIR_CLASS = {
+  "XAU/USD": "xau", "XAG/USD": "xag", "EUR/USD": "eur", "BTC/USD": "btc"
+};
+const PAIR_PILL_CLASS = {
+  "XAU/USD": "pair-XAU", "XAG/USD": "pair-XAG", "EUR/USD": "pair-EUR", "BTC/USD": "pair-BTC"
+};
+
+function fmt(n, dec = 2) {
+  if (n == null) return "—";
+  return Number(n).toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function fmtPct(n) {
+  if (n == null) return "—";
+  const s = n >= 0 ? "+" : "";
+  return `${s}${Number(n).toFixed(2)}%`;
+}
+function fmtUsd(n) {
+  if (n == null) return "—";
+  const s = n >= 0 ? "+" : "";
+  return `${s}$${Math.abs(n).toFixed(2)}`;
+}
+function fmtTime(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+}
+function fmtDate(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return d.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit" }) + " " +
+    d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+}
+
+function PnlCell({ pnl_usd, pnl_pct }) {
+  const cls = pnl_usd > 0 ? "pnl-positive" : pnl_usd < 0 ? "pnl-negative" : "pnl-zero";
+  const color = pnl_usd > 0 ? "#3fb950" : pnl_usd < 0 ? "#f85149" : "#6e7681";
+  return (
+    <div className={`pnl-bar ${cls}`}>
+      <div className="pnl-indicator" style={{ background: color }}/>
+      <span>{fmtUsd(pnl_usd)} <span style={{opacity:0.7}}>({fmtPct(pnl_pct)})</span></span>
+    </div>
+  );
+}
+
+function PriceCard({ pair, price, prevPrice, ema }) {
+  const [flash, setFlash] = useState("");
+  const prevRef = useRef(price);
+
+  useEffect(() => {
+    if (prevRef.current !== price && price != null) {
+      setFlash(price > prevRef.current ? "price-flash" : "price-flash-red");
+      setTimeout(() => setFlash(""), 400);
+      prevRef.current = price;
+    }
+  }, [price]);
+
+  const cls = PAIR_CLASS[pair] || "";
+  const pillCls = PAIR_PILL_CLASS[pair] || "";
+  const decimals = pair === "BTC/USD" ? 0 : pair === "XAU/USD" || pair === "XAG/USD" ? 2 : 4;
+
+  return (
+    <div className={`price-card ${cls} ${flash}`}>
+      <div className="price-card-pair">{pair}</div>
+      <div className="price-card-price">
+        {price != null ? fmt(price, decimals) : <span style={{color:"var(--text2)"}}>—</span>}
+      </div>
+      {ema && (
+        <div className="price-card-ema">
+          <span className="ema-fast">EMA{9}: {fmt(ema.fast, decimals)}</span>
+          <span className="ema-slow">EMA{21}: {fmt(ema.slow, decimals)}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OpenTradesTable({ trades }) {
+  if (!trades || trades.length === 0) {
+    return (
+      <div className="empty">
+        <div className="empty-icon">◈</div>
+        Nessuna posizione aperta
+      </div>
+    );
+  }
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Coppia</th>
+          <th>Direzione</th>
+          <th>Apertura</th>
+          <th>Prezzo entrata</th>
+          <th>Prezzo attuale</th>
+          <th>P&L Live</th>
+        </tr>
+      </thead>
+      <tbody>
+        {trades.map(t => (
+          <tr key={t.id}>
+            <td style={{color:"var(--text2)", fontFamily:"var(--font-mono)"}}>{t.id}</td>
+            <td><span className={`pair-pill ${PAIR_PILL_CLASS[t.pair]||""}`}>{t.pair}</span></td>
+            <td>
+              <span className={`badge badge-${t.direction.toLowerCase()}`}>
+                {t.direction === "BUY" ? "▲" : "▼"} {t.direction}
+              </span>
+            </td>
+            <td style={{color:"var(--text1)"}}>{fmtTime(t.open_time)}</td>
+            <td>{fmt(t.entry_price, t.pair === "BTC/USD" ? 0 : 4)}</td>
+            <td>{t.current_price != null ? fmt(t.current_price, t.pair === "BTC/USD" ? 0 : 4) : "—"}</td>
+            <td><PnlCell pnl_usd={t.live_pnl_usd} pnl_pct={t.live_pnl_pct} /></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function ClosedTradesTable({ trades }) {
+  if (!trades || trades.length === 0) {
+    return (
+      <div className="empty">
+        <div className="empty-icon">◇</div>
+        Nessuna operazione chiusa
+      </div>
+    );
+  }
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Coppia</th>
+          <th>Direzione</th>
+          <th>Apertura</th>
+          <th>Chiusura</th>
+          <th>Entrata</th>
+          <th>Uscita</th>
+          <th>P&L</th>
+        </tr>
+      </thead>
+      <tbody>
+        {trades.map(t => (
+          <tr key={t.id}>
+            <td style={{color:"var(--text2)"}}>{t.id}</td>
+            <td><span className={`pair-pill ${PAIR_PILL_CLASS[t.pair]||""}`}>{t.pair}</span></td>
+            <td>
+              <span className={`badge badge-${t.direction.toLowerCase()}`}>
+                {t.direction === "BUY" ? "▲" : "▼"} {t.direction}
+              </span>
+            </td>
+            <td style={{color:"var(--text1)", fontSize:"11px"}}>{fmtDate(t.open_time)}</td>
+            <td style={{color:"var(--text1)", fontSize:"11px"}}>{fmtDate(t.close_time)}</td>
+            <td>{fmt(t.entry_price, t.pair === "BTC/USD" ? 0 : 4)}</td>
+            <td>{fmt(t.exit_price, t.pair === "BTC/USD" ? 0 : 4)}</td>
+            <td><PnlCell pnl_usd={t.pnl_usd} pnl_pct={t.pnl_pct} /></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function App() {
+  const [state, setState] = useState(null);
+  const [connected, setConnected] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  const wsRef = useRef(null);
+  const prevPrices = useRef({});
+
+  const connect = useCallback(() => {
+    // Prima prova a caricare stato via HTTP
+    fetch(API_URL)
+      .then(r => r.json())
+      .then(data => { setState(data); prevPrices.current = data.prices || {}; })
+      .catch(() => {});
+
+    const ws = new WebSocket(WS_URL);
+    wsRef.current = ws;
+
+    ws.onopen = () => { setConnected(true); console.log("[WS] Connesso"); };
+    ws.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      if (data.type === "update") {
+        prevPrices.current = state?.prices || {};
+        setState(data);
+        setLastUpdate(new Date());
+      }
+    };
+    ws.onclose = () => {
+      setConnected(false);
+      console.log("[WS] Disconnesso, riprovo...");
+      setTimeout(connect, 3000);
+    };
+    ws.onerror = () => ws.close();
+  }, []);
+
+  useEffect(() => { connect(); return () => wsRef.current?.close(); }, [connect]);
+
+  const totalPnl = state ? state.balance - state.initial_balance : 0;
+  const totalPnlPct = state ? ((state.balance - state.initial_balance) / state.initial_balance) * 100 : 0;
+  const winTrades = state?.closed_trades?.filter(t => t.pnl_usd > 0).length || 0;
+  const totalClosed = state?.closed_trades?.length || 0;
+  const winRate = totalClosed > 0 ? ((winTrades / totalClosed) * 100).toFixed(0) : "—";
+
+  const PAIRS_LIST = ["XAU/USD", "XAG/USD", "EUR/USD", "BTC/USD"];
+
+  return (
+    <div className="app">
+      {/* Header */}
+      <div className="header">
+        <div className="header-left">
+          <div className="logo">TRADE<span>BOT</span></div>
+          <div className={`status-dot ${connected ? "" : "offline"}`}/>
+          <div className="status-label">{connected ? "LIVE" : "OFFLINE"}</div>
+        </div>
+        <div className="header-time">
+          {lastUpdate ? lastUpdate.toLocaleTimeString("it-IT") : "—"}
+        </div>
+      </div>
+
+      {/* Balance bar */}
+      <div className="balance-bar">
+        <div className="balance-card">
+          <div className="balance-card-label">Balance</div>
+          <div className="balance-card-value">${fmt(state?.balance)}</div>
+        </div>
+        <div className="balance-card">
+          <div className="balance-card-label">P&L Totale</div>
+          <div className={`balance-card-value ${totalPnl >= 0 ? "positive" : "negative"}`}>
+            {fmtUsd(totalPnl)} ({fmtPct(totalPnlPct)})
+          </div>
+        </div>
+        <div className="balance-card">
+          <div className="balance-card-label">Posizioni Aperte</div>
+          <div className="balance-card-value">{state?.open_trades?.length ?? "—"}</div>
+        </div>
+        <div className="balance-card">
+          <div className="balance-card-label">Win Rate</div>
+          <div className={`balance-card-value ${parseFloat(winRate) >= 50 ? "positive" : "negative"}`}>
+            {winRate}{winRate !== "—" ? "%" : ""} <span style={{fontSize:"12px", color:"var(--text1)"}}>({winTrades}/{totalClosed})</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Prezzi */}
+      <div className="main-grid">
+        {PAIRS_LIST.map(pair => (
+          <PriceCard
+            key={pair}
+            pair={pair}
+            price={state?.prices?.[pair]}
+            prevPrice={prevPrices.current?.[pair]}
+            ema={state?.ema?.[pair]}
+          />
+        ))}
+      </div>
+
+      {/* Posizioni Aperte */}
+      <div className="section">
+        <div className="section-header">
+          <span className="section-title">Posizioni Aperte</span>
+          <span className="section-count">{state?.open_trades?.length ?? 0}</span>
+        </div>
+        {!state ? (
+          <div className="loading"><div className="spinner"/><span>Connessione al server...</span></div>
+        ) : (
+          <OpenTradesTable trades={state.open_trades} />
+        )}
+      </div>
+
+      {/* Storico */}
+      <div className="section">
+        <div className="section-header">
+          <span className="section-title">Storico Operazioni</span>
+          <span className="section-count">{state?.closed_trades?.length ?? 0}</span>
+        </div>
+        {!state ? (
+          <div className="loading"><div className="spinner"/></div>
+        ) : (
+          <ClosedTradesTable trades={state.closed_trades} />
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{textAlign:"center", padding:"20px 0 8px", color:"var(--text2)", fontSize:"11px", letterSpacing:"1px"}}>
+        PAPER TRADING — NESSUN DENARO REALE — STRATEGIA EMA {9}/{21}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
