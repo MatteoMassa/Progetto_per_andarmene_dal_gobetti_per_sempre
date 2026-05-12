@@ -15,3 +15,5 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 cd trading-bot/frontend
 
 python -m http.server 3000
+
+http://localhost:3000
