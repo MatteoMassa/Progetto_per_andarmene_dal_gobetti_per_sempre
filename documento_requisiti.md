@@ -136,7 +136,7 @@ Utilizzata per la gestione delle operazioni di trading (apertura/chiusura posizi
 - UC04 `<<extend>>` UC03 — l'utente può decidere di aprire una posizione direttamente dalla schermata di monitoraggio dei prezzi.
 
 
-![alt text](casi.png)
+![alt text](use_case_diagram_trading.svg)
 
 
 
