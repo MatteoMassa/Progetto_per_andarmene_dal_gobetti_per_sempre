@@ -1,0 +1,98 @@
+<svg width="680" viewBox="0 0 680 380" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>Diagramma di Gantt — Piattaforma di Trading (5 settimane)</title>
+  <desc>Gantt chart su 5 settimane con attività suddivise per fase: analisi, sviluppo, funzionalità avanzate e testing/consegna.</desc>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #2C2C2A; }
+    .th { font-size: 13px; font-weight: 600; }
+    .ts { font-size: 11px; fill: #5F5E5A; }
+    .sep { stroke: #D3D1C7; stroke-width: 0.5; }
+    .hdr { fill: #F1EFE8; }
+    .grp { fill: #D3D1C7; }
+    .bar-teal   { fill: #5DCAA5; rx: 4; }
+    .bar-purple { fill: #AFA9EC; }
+    .bar-amber  { fill: #FAC775; }
+    .bar-coral  { fill: #F0997B; }
+    .milestone-green  { fill: #1D9E75; }
+    .milestone-amber  { fill: #BA7517; }
+  </style>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="680" height="40" class="hdr"/>
+  <text class="th" x="16" y="24">Attività</text>
+  <text class="th" x="246" y="24" text-anchor="middle">Sett. 1</text>
+  <text class="th" x="338" y="24" text-anchor="middle">Sett. 2</text>
+  <text class="th" x="430" y="24" text-anchor="middle">Sett. 3</text>
+  <text class="th" x="522" y="24" text-anchor="middle">Sett. 4</text>
+  <text class="th" x="614" y="24" text-anchor="middle">Sett. 5</text>
+
+  <!-- Vertical dividers -->
+  <line class="sep" x1="200" y1="0" x2="200" y2="380"/>
+  <line class="sep" x1="292" y1="40" x2="292" y2="380"/>
+  <line class="sep" x1="384" y1="40" x2="384" y2="380"/>
+  <line class="sep" x1="476" y1="40" x2="476" y2="380"/>
+  <line class="sep" x1="568" y1="40" x2="568" y2="380"/>
+  <line class="sep" x1="660" y1="40" x2="660" y2="380"/>
+
+  <!-- Group: ANALISI -->
+  <rect x="0" y="40" width="200" height="30" class="hdr"/>
+  <text class="ts" x="14" y="58" font-weight="700" fill="#0F6E56">ANALISI</text>
+  <line class="sep" x1="0" y1="70" x2="680" y2="70"/>
+
+  <!-- Row 1 -->
+  <text class="ts" x="14" y="91">Requisiti, schema ER e UML</text>
+  <rect x="204" y="77" width="84" height="20" rx="4" class="bar-teal"/>
+  <line class="sep" x1="0" y1="104" x2="680" y2="104"/>
+
+  <!-- Row 2 -->
+  <text class="ts" x="14" y="125">Setup ambiente e Flask</text>
+  <rect x="204" y="111" width="84" height="20" rx="4" class="bar-teal"/>
+  <line class="sep" x1="0" y1="138" x2="680" y2="138"/>
+
+  <!-- Group: SVILUPPO -->
+  <rect x="0" y="138" width="200" height="30" class="hdr"/>
+  <text class="ts" x="14" y="156" font-weight="700" fill="#3C3489">SVILUPPO</text>
+  <line class="sep" x1="0" y1="168" x2="680" y2="168"/>
+
+  <!-- Row 3 -->
+  <text class="ts" x="14" y="189">Autenticazione e utenti</text>
+  <rect x="296" y="175" width="84" height="20" rx="4" class="bar-purple"/>
+  <line class="sep" x1="0" y1="202" x2="680" y2="202"/>
+
+  <!-- Row 4 -->
+  <text class="ts" x="14" y="223">Integrazione Yahoo Finance</text>
+  <rect x="296" y="209" width="176" height="20" rx="4" class="bar-purple"/>
+  <line class="sep" x1="0" y1="236" x2="680" y2="236"/>
+
+  <!-- Row 5 -->
+  <text class="ts" x="14" y="257">Integrazione API di Trading</text>
+  <rect x="388" y="243" width="84" height="20" rx="4" class="bar-purple"/>
+  <line class="sep" x1="0" y1="270" x2="680" y2="270"/>
+
+  <!-- Group: FUNZIONALITÀ -->
+  <rect x="0" y="270" width="200" height="30" class="hdr"/>
+  <text class="ts" x="14" y="288" font-weight="700" fill="#854F0B">FUNZIONALITÀ AVANZATE</text>
+  <line class="sep" x1="0" y1="300" x2="680" y2="300"/>
+
+  <!-- Row 6 -->
+  <text class="ts" x="14" y="321">Posizioni aperte e P&amp;L real-time</text>
+  <rect x="388" y="307" width="176" height="20" rx="4" class="bar-amber"/>
+  <line class="sep" x1="0" y1="334" x2="680" y2="334"/>
+
+  <!-- Row 7 -->
+  <text class="ts" x="14" y="355">Storico, filtri e profilo</text>
+  <rect x="480" y="341" width="84" height="20" rx="4" class="bar-amber"/>
+  <line class="sep" x1="0" y1="368" x2="680" y2="368"/>
+
+  <!-- Row 8 -->
+  <text class="ts" x="14" y="389">Testing, bug fix e consegna</text>
+  <rect x="572" y="375" width="84" height="20" rx="4" class="bar-coral"/>
+
+  <!-- Milestones -->
+  <polygon points="292,48 298,58 292,68 286,58" class="milestone-green"/>
+  <polygon points="476,48 482,58 476,68 470,58" class="milestone-green"/>
+  <polygon points="660,48 666,58 660,68 654,58" class="milestone-amber"/>
+
+  <text class="ts" x="292" y="74" text-anchor="middle">Setup ok</text>
+  <text class="ts" x="476" y="74" text-anchor="middle">API ok</text>
+  <text class="ts" x="658" y="74" text-anchor="end">Consegna</text>
+</svg>
